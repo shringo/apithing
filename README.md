@@ -1,28 +1,107 @@
-# Create T3 App
+# Precursor: WTF is an API?
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+APIs (Application Programming Interface), (in this context) simply put, allow the general public to call a URL and to submit or receive data from your database or backend. More generally, it implements calls to a library or a backend service.
 
-## What's next? How do I make an app with this?
+For example, if you wanted to contact Twitter to see all your private tweets, you would send a `GET` request to a URL looking something like this:
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+```
+twitter.com/api/paid/v2/users/<id>/tweets
+```
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+...including credentials, so everyone can't freely access your tweets. The response would come back in a `JSON` object for webpages as it easily integrates into JavaScript. To determine if an API was written well, it a) comes with documentation, b) has consistency and c) has security (credentials) to access specific parts.
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+```json
+[
+    {
+        "handler": "@mccafe",
+        "content": "lol",
 
-## Learn More
+        "sent": 1697780425858,
+        "likes": 69,
+        "retweets": 420,
+        "shares": 2,
+        "views": 9
+    },
+    {
+        "handler": "@mccafe",
+        "content": "bruh",
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+        "sent": 1689680325725,
+        "likes": 1,
+        "retweets": 10,
+        "shares": 5,
+        "views": 3
+    }
+]
+```
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+# "notes" from T3 3 hour video
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+## First, make a T3 App
 
-## How do I deploy this?
+Run the command: `npm create t3-app@latest`
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+You will be greeted with just about the fanciest UI in your terminal. 
+
+Choose Typescript. Choosing Javascript will result in a big middle finger. See [this](https://github.com/t3-oss/create-t3-app/issues/117)
+
+Use Tailwinds CSS
+
+Use tRPC
+
+Select None (for auth provider)
+
+Select Prisma for the database ORM.
+
+'No' for app router
+
+Sure, initialize a git repo cuz ynot
+
+Let it run npm install.
+
+## MongoDB Setup
+
+Do the steps listed on the Coding Prison Notes on how to make a MongoDB account & database.
+
+Find the `./.env` file and replace it with the DB URL you copied. YOU NEED TO MAKE A DB ON MONGODB THAT HAS A TABLE CALLED `Posts`. It looks like this:
+
+```
+mongodb+srv://name:password@projectname.idk.mongodb.net/nameofdatabase
+```
+
+The password is not and needs to be substituted into the URL or you will get an authorization error when running.
+
+Run `npx prisma studio` and a tab will be opened. Navigate to localhost:5555 if you were not automatically taken there. Click on "Posts".
+
+**An error will be expected.** Stop the program, go to `./prisma/schema.prisma` and make the following change:
+
+```diff
+datasource db {
+--    provider = "sqlite"
+++    provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+model Post {
+--    id        Int      @id @default(autoincrement())
+++    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+```
+
+Because we switched from SQLite to MongoDB, the functions are different. Mongo does not know what `autoincrement` is, so a hacky change was made after looking at [Kobe's code](https://github.com/KobeUyeda/React-t3-trpc/blob/main/trpctest/prisma/schema.prisma).
+
+If you did not make the changes, you will see this error:
+
+```log
+Error: Prisma schema validation - (get-config wasm)
+Error code: P1012
+error: Error validating datasource `db`: the URL must start with the protocol `file:`.
+  -->  schema.prisma:10
+   | 
+ 9 |     provider = "sqlite"
+10 |     url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+```
+
+Run `npx prisma db push` so MongoDB can generate the schema based off of the Prisma schema. Now, running `npx prisma studio` will run without errors. You can also add entries from the GUI. 😃
