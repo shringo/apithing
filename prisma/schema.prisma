@@ -12,9 +12,9 @@ datasource db {
 
 model Post {
     id        String   @id @default(auto()) @map("_id") @db.ObjectId
-    name      String
     createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    content   String
+    author    String
 
-    @@index([name])
+    @@index([author])
 }
