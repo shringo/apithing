@@ -3,6 +3,7 @@ import { User } from "@clerk/nextjs/dist/types/server";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
+import { LoadingSpinner } from "~/components/loading";
 
 import { RouterOutputs, api } from "~/utils/api";
 
@@ -34,7 +35,7 @@ function ProcessDate(post: PostUser) {
   else msg = Math.round(diff / 1000 / 60 / 60 / 24 / 365) + " years ago";
 
   return (
-    <span>{msg.startsWith('1') ? msg.replace("s ago", " ago") : msg}</span>
+    <span className="font-light">{msg.startsWith('1') ? msg.replace("s ago", " ago") : msg}</span>
   )
 }
 
@@ -45,24 +46,37 @@ function PostView(props: PostUser) {
     <div className="flex gap-3 p-4 border-b border-slate-400" key={post.id}>
       <Image src={author.avatar} className="w-12 h-12 rounded-full" alt={author.avatar + "'s profile picture"} width={56} height={56}/>
       <div className="flex flex-col">
-        <div className="flex text-slate-300 font-bold gap-1">
+        <div className="flex text-slate-300 gap-1">
           <span>{'@' + author.username}</span>
-          <span>•</span>
+          <span className="font-light">•</span>
           <ProcessDate {...props}/>
         </div>
-        <span>{post.content}</span>
+        <span className="text-xl">{post.content}</span>
       </div>
     </div>
   );
 }
 
+function Feed() {
+  const { data, isLoading: postLoading } = api.post.getAll.useQuery();
+  if(postLoading) return <LoadingSpinner/>;
+  if(!data) return <div>Weird shit happened</div>;
+  return (
+    <div className="flex flex-col">
+    {data.map((post) => (
+      <PostView {...post} key={post.post.id}/>
+    ))}
+  </div>
+  );
+}
+
 export default function Home() {
-  const user = useUser();
-  const {data, isLoading} = api.post.getAll.useQuery();
+  const { user, isLoaded: userLoaded, isSignedIn } = useUser();
 
-  if(isLoading) return <div>Loading shit...</div>;
+  // cache the data
+  api.post.getAll.useQuery();
 
-  if(!data) return <div>Error loading data...</div>;
+  if(!userLoaded) return <div/>;
 
   return (
     <>
@@ -75,16 +89,12 @@ export default function Home() {
         <div className="w-full md:max-w-2xl border-x h-full border-slate-400">
           <div className="border-b border-slate-400 p-4 flex gap-5">
             {
-              user.isSignedIn ? 
+              isSignedIn ? 
               <PostToast></PostToast> : 
-              <div className="flex justify-center">{user.isSignedIn ? <SignOutButton></SignOutButton> : <SignInButton></SignInButton>}</div>
+              <div className="flex justify-center">{isSignedIn ? <SignOutButton></SignOutButton> : <SignInButton></SignInButton>}</div>
             }
           </div>
-          <div className="flex flex-col">
-            {data.map((post) => (
-              <PostView {...post} key={post.post.id}/>
-            ))}
-          </div>
+          <Feed/>
         </div>
       </main>
     </>
