@@ -1,16 +1,15 @@
 import type { GetStaticProps, NextPage } from "next";
 import PageLayout from "~/components/layout";
 import Head from "next/head";
-import toast from "react-hot-toast";
 import { api } from "~/utils/api";
 import getServerSideHelper from "~/server/helpers/SSHelper";
 import { PostView } from "~/components/postview";
+import Link from "next/link";
 
 const OnePostPage: NextPage<{id:string}> = ({ id }) => {
   const { data } = api.post.getById.useQuery({ id });
   if(!data) { 
-    toast.error("Post not found.");
-    return;
+    return (<Link href="/" className="text-3xl font-bold absolute flex h-screen w-screen items-center justify-center">Post not found | Go home</Link>);
   }
   return (
     <>

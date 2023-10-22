@@ -8,9 +8,9 @@ import PageLayout from "~/components/layout";
 import Image from "next/image";
 import { LoadingPage } from "~/components/loading";
 import Head from "next/head";
-import toast from "react-hot-toast";
 import { api } from "~/utils/api";
 import { PostView } from "~/components/postview";
+import Link from 'next/link';
 
 const ProfileFeed = (props: { userId: string }) => {
   const { data, isLoading } = api.post.getByUser.useQuery({ userId: props.userId});
@@ -26,10 +26,8 @@ const ProfileFeed = (props: { userId: string }) => {
 }
 const ProfilePage: NextPage<{username:string}> = ({ username }) => {
   const { data } = api.profile.getProfileByname.useQuery({ username });
-  if(!data) { 
-    toast.error("User not found.");
-    return;
-  }
+  if(!data) 
+    return (<Link href="/" className="text-3xl font-bold absolute flex h-screen w-screen items-center justify-center">User not found | Go home</Link>);
   return (
     <>
       <Head>

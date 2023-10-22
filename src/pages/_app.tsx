@@ -12,7 +12,6 @@ const MyApp: AppType = ({ Component, pageProps }) => {
     <Head>
         <title>2witter</title>
         <meta name="description" content="💸🐦" />
-        <link rel="icon" href="/favicon.ico" />
     </Head>
     <Toaster position="bottom-center"/>
     <Component {...pageProps} />
