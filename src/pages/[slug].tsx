@@ -14,7 +14,7 @@ import { PostView } from "~/components/postview";
 
 const AVATAR_SIZE = 128; 
 const ProfileFeed = (props: { userId: string }) => {
-  const { data, isLoading } = api.post.getPostsByUser.useQuery({ userId: props.userId});
+  const { data, isLoading } = api.post.getByUser.useQuery({ userId: props.userId});
   if(isLoading) return <LoadingPage/>;
   if(!data || data.length === 0) return <div>User has not posted</div>;
   return (

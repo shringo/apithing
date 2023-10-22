@@ -21,8 +21,7 @@ const config = {
     domains: [
       "img.clerk.com"
     ]
-  },
-  swcMinify: true
+  }
 };
 
 export default config;
