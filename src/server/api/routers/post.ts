@@ -6,12 +6,31 @@ import { createTRPCRouter, privateProcedure, publicProcedure } from "~/server/ap
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import filterUser from "~/server/helpers/FilterUser";
+import type { Post } from "@prisma/client";
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(2, "1m"),
   analytics: true
 })
+
+const userDataToPost = async (posts: Post[]) => {
+  const users = (await clerkClient.users.getUserList({
+    userId: posts.map(map => map.author),
+    limit: 100
+  })).map(filterUser);
+  return posts.map((post) => {
+    const author = users.find(user => user.id === post.author);
+    if(typeof author?.username !== "string") throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Author for post not found" });
+    else return {
+      post,
+      author: {
+        ...author,
+        username: author.username
+      }
+    };
+  });
+}
 
 export const postRouter = createTRPCRouter({
   create: privateProcedure.input(z.object({
@@ -39,20 +58,16 @@ export const postRouter = createTRPCRouter({
         }
       ]
     });
-    const users = (await clerkClient.users.getUserList({
-      userId: posts.map(map => map.author),
-      limit: 100
-    })).map(filterUser);
-    return posts.map((post) => {
-      const author = users.find(user => user.id === post.author);
-      if(typeof author?.username !== "string") throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Author for post not found" });
-      else return {
-        post,
-        author: {
-          ...author,
-          username: author.username
-        }
-      };
-    });
+    return userDataToPost(posts);
   }),
+  getPostsByUser: publicProcedure.input(z.object({ userId: z.string() }))
+  .query(({ ctx, input }) => ctx.db.post.findMany({
+          where: {
+              author: input.userId
+          },
+          orderBy: {
+              createdAt: "desc"
+          },
+          take: 100
+  }).then(userDataToPost))
 });

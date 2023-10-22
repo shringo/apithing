@@ -14,22 +14,5 @@ export const profileRouter = createTRPCRouter({
             if(!user) throw new TRPCError({ code:"NOT_FOUND", message: "User not found." });
 
             return filterUser(user);
-        }),
-    getPostsByUser: publicProcedure.input(z.object({ userId: z.string() }))
-        .query(async ({ ctx, input }) => {
-            const user = await clerkClient.users.getUser(input.userId);
-            if(!user) throw new TRPCError({ code:"NOT_FOUND", message: "User not found." });
-
-            const posts = await ctx.db.post.findMany({
-                where: {
-                    author: input.userId
-                },
-                orderBy: {
-                    createdAt: "desc"
-                },
-                take: 100
-            });
-
-            return posts;
         })
 });
