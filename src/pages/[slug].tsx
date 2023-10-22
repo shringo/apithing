@@ -12,7 +12,6 @@ import toast from "react-hot-toast";
 import { api } from "~/utils/api";
 import { PostView } from "~/components/postview";
 
-const AVATAR_SIZE = 128; 
 const ProfileFeed = (props: { userId: string }) => {
   const { data, isLoading } = api.post.getByUser.useQuery({ userId: props.userId});
   if(isLoading) return <LoadingPage/>;
@@ -41,12 +40,12 @@ const ProfilePage: NextPage<{username:string}> = ({ username }) => {
           <Image 
             src={data.avatar} 
             alt={data.username + "'s avatar"}
-            width={AVATAR_SIZE}
-            height={AVATAR_SIZE}
-            className={"-mb-[" + (AVATAR_SIZE / 2) + "px] absolute bottom-0 left-0 ml-4 rounded-full border-4 border-black"}
+            width={128}
+            height={128}
+            className={"-mb-[64px] absolute bottom-0 left-0 ml-4 rounded-full border-4 border-black"}
           />
         </div>
-        <div className={"h-[" + (AVATAR_SIZE / 2) + "px]"}/>
+        <div className={"h-[64px]"}/>
         <div className="p-4 text-2xl font-bold">{'@' + data.username}</div>
         <div className="border-b border-slate-400 w-full"></div>
         <ProfileFeed userId={data.id}/>

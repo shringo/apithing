@@ -1,6 +1,10 @@
+import dayjs from "dayjs";
 import Image from "next/image";
 import Link from "next/link";
 import type { RouterOutputs } from "~/utils/api";
+
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 type PostUser = RouterOutputs["post"]["getAll"][number];
 export function PostView(props: PostUser) {
@@ -15,7 +19,7 @@ export function PostView(props: PostUser) {
           </Link>
           <span className="font-light">•</span>
           <Link href={'/post/' + post.id}>
-            <ProcessDate {...props}/>
+            {dayjs(post.createdAt).fromNow()}
           </Link>
         </div>
         <span className="text-l break-all whitespace-normal">{post.content}</span>
@@ -23,22 +27,3 @@ export function PostView(props: PostUser) {
     </div>
   );
 }
-
-function ProcessDate(post: PostUser) {
-    const { createdAt } = post.post;
-    const diff = Date.now() - createdAt.getTime();
-    let msg = "";
-  
-    if(diff < 5 * 1000) msg = "Moments ago";
-    else if(diff < 60 * 1000) msg = Math.round(diff / 1000) + " seconds ago";
-    else if(diff < 60 * 60 * 1000) msg = Math.round(diff / 1000 / 60) + " minutes ago";
-    else if(diff < 24 * 60 * 60 * 1000) msg = Math.round(diff / 1000 / 60 / 60) + " hours ago";
-    else if(diff < 7 * 24 * 60 * 60 * 1000) msg = Math.round(diff / 1000 / 60 / 60 / 24) + " days ago";
-    else if(diff < 30 * 7 * 24 * 60 * 60 * 1000) msg = Math.round(diff / 1000 / 60 / 60 / 24 / 7) + " weeks ago";
-    else if(diff < 365 * 24 * 60 * 60 * 1000) msg = Math.round(diff / 1000 / 60 / 60 / 24 / 7 / 30) + " months ago";
-    else msg = Math.round(diff / 1000 / 60 / 60 / 24 / 365) + " years ago";
-  
-    return (
-      <span className="font-light">{msg.startsWith('1 ') ? msg.replace("s ago", " ago") : msg}</span>
-    )
-  }
