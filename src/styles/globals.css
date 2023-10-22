@@ -3,5 +3,17 @@
 @tailwind utilities;
 
 body {
-    @apply bg-black text-slate-100
+    @apply bg-black text-slate-100;
+
+    overscroll-behavior: none;
 }
+
+::-webkit-scrollbar {
+    width: 0em;
+    background: rgba(0,0,0,0);
+  }
+
+  ::-webkit-scrollbar-track-piece
+  {
+     display:none;
+  }

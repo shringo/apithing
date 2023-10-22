@@ -1,4 +1,5 @@
 import Head from "next/head";
+import PageLayout from "~/components/layout";
 
 export default function PostPage() {
   return (
@@ -6,9 +7,9 @@ export default function PostPage() {
       <Head>
         <title>Post</title>
       </Head>
-      <main className="flex h-screen justify-center">
-      <div>Post View</div>
-      </main>
+      <PageLayout>
+        <div>Post View</div>
+      </PageLayout>
     </>
   );
 }

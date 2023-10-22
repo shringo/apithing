@@ -1,12 +1,14 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/clerk-react";
-import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import toast from "react-hot-toast";
 import { LoadingPage, LoadingSpinner } from "~/components/loading";
 
-import { RouterOutputs, api } from "~/utils/api";
+import PageLayout from "~/components/layout";
+import { api } from "~/utils/api";
+import type { RouterOutputs } from "~/utils/api";
 
 export function PostToast(props: { input: string, setInput: Dispatch<SetStateAction<string>>}) {
   const { input, setInput } = props;
@@ -58,8 +60,7 @@ export function PostToast(props: { input: string, setInput: Dispatch<SetStateAct
 export function ProcessDate(post: PostUser) {
   const { createdAt } = post.post;
   const diff = Date.now() - createdAt.getTime();
-
-  var msg = "";
+  let msg = "";
 
   if(diff < 5 * 1000) msg = "Moments ago";
   else if(diff < 60 * 1000) msg = Math.round(diff / 1000) + " seconds ago";
@@ -102,7 +103,7 @@ export function Feed() {
   if(postLoading) return <LoadingPage/>;
   if(!data) return <div>No data available</div>;
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col border-slate-400">
     {data.map((post) => (
       <PostView {...post} key={post.post.id}/>
     ))}
@@ -111,7 +112,7 @@ export function Feed() {
 }
 
 export default function Home() {
-  const { user, isLoaded: userLoaded, isSignedIn } = useUser();
+  const { isLoaded: userLoaded, isSignedIn } = useUser();
   const [ draftPost, setDraftPost ] = useState("");
 
   // cache the data
@@ -120,19 +121,15 @@ export default function Home() {
   if(!userLoaded) return <div/>;
 
   return (
-    <>
-      <main className="flex h-screen justify-center">
-        <div className="w-full md:max-w-2xl border-x h-full border-slate-400">
-          <div className="border-b border-slate-400 p-4 flex gap-5">
-            {
-              isSignedIn ? 
-              <PostToast input={draftPost} setInput={setDraftPost}></PostToast> : 
-              <div className="flex justify-center">{isSignedIn ? <SignOutButton></SignOutButton> : <SignInButton></SignInButton>}</div>
-            }
-          </div>
-          <Feed/>
-        </div>
-      </main>
-    </>
+    <PageLayout>
+      <div className="border-b border-t border-slate-400 p-4 flex gap-5">
+        {
+          isSignedIn ? 
+          <PostToast input={draftPost} setInput={setDraftPost}></PostToast> : 
+          <div className="flex justify-center">{isSignedIn ? <SignOutButton></SignOutButton> : <SignInButton></SignInButton>}</div>
+        }
+      </div>
+      <Feed/>
+    </PageLayout>
   );
 }
