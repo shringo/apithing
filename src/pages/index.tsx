@@ -1,15 +1,16 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/clerk-react";
 import Head from "next/head";
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { Dispatch, SetStateAction, useState } from "react";
 import toast from "react-hot-toast";
 import { LoadingPage, LoadingSpinner } from "~/components/loading";
 
 import { RouterOutputs, api } from "~/utils/api";
 
-function PostToast() {
+export function PostToast(props: { input: string, setInput: Dispatch<SetStateAction<string>>}) {
+  const { input, setInput } = props;
   const { user } = useUser();
-  const [ input, setInput ] = useState("");
   const ctx = api.useUtils();
   const { mutate, isLoading: isPosting } = api.post.create.useMutation({
     onSuccess: () => {
@@ -54,7 +55,7 @@ function PostToast() {
   )
 }
 
-function ProcessDate(post: PostUser) {
+export function ProcessDate(post: PostUser) {
   const { createdAt } = post.post;
   const diff = Date.now() - createdAt.getTime();
 
@@ -75,16 +76,20 @@ function ProcessDate(post: PostUser) {
 }
 
 type PostUser = RouterOutputs["post"]["getAll"][number];
-function PostView(props: PostUser) {
+export function PostView(props: PostUser) {
   const { post, author } = props;
   return (
     <div className="flex gap-3 p-4 border-b border-slate-400" key={post.id}>
       <Image src={author.avatar} className="w-12 h-12 rounded-full" alt={author.avatar + "'s profile picture"} width={56} height={56}/>
       <div className="flex flex-col">
         <div className="flex text-slate-300 gap-1">
-          <span>{'@' + author.username}</span>
+          <Link href={'/@' + author.username}>
+            <span>{'@' + author.username}</span>
+          </Link>
           <span className="font-light">•</span>
-          <ProcessDate {...props}/>
+          <Link href={'/post/' + post.id}>
+            <ProcessDate {...props}/>
+          </Link>
         </div>
         <span className="text-l break-all whitespace-normal">{post.content}</span>
       </div>
@@ -92,10 +97,10 @@ function PostView(props: PostUser) {
   );
 }
 
-function Feed() {
+export function Feed() {
   const { data, isLoading: postLoading } = api.post.getAll.useQuery();
   if(postLoading) return <LoadingPage/>;
-  if(!data) return <div>Weird shit happened</div>;
+  if(!data) return <div>No data available</div>;
   return (
     <div className="flex flex-col">
     {data.map((post) => (
@@ -107,6 +112,7 @@ function Feed() {
 
 export default function Home() {
   const { user, isLoaded: userLoaded, isSignedIn } = useUser();
+  const [ draftPost, setDraftPost ] = useState("");
 
   // cache the data
   api.post.getAll.useQuery();
@@ -125,7 +131,7 @@ export default function Home() {
           <div className="border-b border-slate-400 p-4 flex gap-5">
             {
               isSignedIn ? 
-              <PostToast></PostToast> : 
+              <PostToast input={draftPost} setInput={setDraftPost}></PostToast> : 
               <div className="flex justify-center">{isSignedIn ? <SignOutButton></SignOutButton> : <SignInButton></SignInButton>}</div>
             }
           </div>
