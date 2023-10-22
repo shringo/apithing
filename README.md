@@ -194,6 +194,17 @@ Add it to your schema, then `npx prisma db push` to update.
 
 `npm i` to refresh the TypeScript code.
 
+# NPM Package Hell
+
+From the tutorial, we install a few more packages to carry out some tasks for us.
+
 ## What is tRPC?
 
 tRPC is the library we use to create our own API. It relies on TypeScript so your IDE can tell you what endpoints you have on your backend that you want the general user to be able to call in something like a web browser.
+
+### Procedures, public and private
+
+## Upstash ratelimiting
+
+## React-hot-toast
+

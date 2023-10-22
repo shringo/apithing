@@ -1,20 +1,55 @@
-import { SignIn, SignInButton, SignOutButton, useUser } from "@clerk/clerk-react";
-import { User } from "@clerk/nextjs/dist/types/server";
+import { SignInButton, SignOutButton, useUser } from "@clerk/clerk-react";
 import Head from "next/head";
 import Image from "next/image";
-import Link from "next/link";
-import { LoadingSpinner } from "~/components/loading";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { LoadingPage, LoadingSpinner } from "~/components/loading";
 
 import { RouterOutputs, api } from "~/utils/api";
 
 function PostToast() {
   const { user } = useUser();
+  const [ input, setInput ] = useState("");
+  const ctx = api.useUtils();
+  const { mutate, isLoading: isPosting } = api.post.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      void ctx.post.getAll.invalidate();
+    },
+    onError: (e) => {
+      const error = e.data?.zodError?.fieldErrors.content?.[0] ?? "Failed to post, try again later.";
+      toast.error(error);
+    },
+  });
   if(!user) return null;
 
   return (
     <div className="flex gap-4 w-full">
       <Image src={user.imageUrl} className="w-12 h-12 rounded-full" alt={user.username + "'s profile picture"} width={56} height={56}/>
-      <input maxLength={255} minLength={5} placeholder="What the FUCK is happening?!?!?!??!" className="bg-transparent grow"></input>
+      <input 
+        maxLength={255} 
+        minLength={5} 
+        placeholder="What is happening?" 
+        className="bg-slate-900 rounded-3xl grow px-3"
+        type="text"
+        value={input}
+        onKeyDown={(e) => {
+          if(e.key === "Enter") {
+            e.preventDefault();
+            if(input.length) {
+              mutate({ content: input });
+            }
+          }
+        }}
+        onChange={(e) => setInput(e.target.value)}
+        disabled={isPosting}
+      />
+      {input !== "" && !isPosting && <button 
+        className="bg-sky-600 rounded-3xl px-3"
+        onClick={() => mutate({ content: input })}
+        disabled={isPosting}
+      >Tweet</button>}
+      {isPosting && <div className="place-self-center"><LoadingSpinner size={25}/></div>}
     </div>
   )
 }
@@ -51,7 +86,7 @@ function PostView(props: PostUser) {
           <span className="font-light">•</span>
           <ProcessDate {...props}/>
         </div>
-        <span className="text-xl">{post.content}</span>
+        <span className="text-l break-all whitespace-normal">{post.content}</span>
       </div>
     </div>
   );
@@ -59,7 +94,7 @@ function PostView(props: PostUser) {
 
 function Feed() {
   const { data, isLoading: postLoading } = api.post.getAll.useQuery();
-  if(postLoading) return <LoadingSpinner/>;
+  if(postLoading) return <LoadingPage/>;
   if(!data) return <div>Weird shit happened</div>;
   return (
     <div className="flex flex-col">
