@@ -1,3 +1,21 @@
+# video notes
+
+Comments on each commit after watching video to sorta explain what's going on in each change:
+
+[click here](https://github.com/shringo/apithing/commits)
+
+### external libs & purpose
+upstash - ratelimiter when needed
+ClerkJS - auth library
+tRPC - helps with API calls
+zod - validation library for arguments passed through API calls
+MongoDB - db
+Prisma - helps with schema for mongodb
+hot-react-toast - lil' pop-up notifications
+dayjs - formatting times
+
+# Below: Incomplete stuff on t3 stack
+
 # Precursor: WTF is an API?
 
 APIs (Application Programming Interface), (in this context) simply put, allow the general public to call a URL and to submit or receive data from your database or backend. More generally, it implements calls to a library or a backend service.
@@ -201,10 +219,3 @@ From the tutorial, we install a few more packages to carry out some tasks for us
 ## What is tRPC?
 
 tRPC is the library we use to create our own API. It relies on TypeScript so your IDE can tell you what endpoints you have on your backend that you want the general user to be able to call in something like a web browser.
-
-### Procedures, public and private
-
-## Upstash ratelimiting
-
-## React-hot-toast
-
