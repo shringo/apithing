@@ -5,14 +5,109 @@ Comments on each commit after watching video to sorta explain what's going on in
 [click here](https://github.com/shringo/apithing/commits)
 
 ### external libs & purpose
-upstash - ratelimiter when needed
-ClerkJS - auth library
-tRPC - helps with API calls
-zod - validation library for arguments passed through API calls
-MongoDB - db
-Prisma - helps with schema for mongodb
-hot-react-toast - lil' pop-up notifications
-dayjs - formatting times
+* upstash - ratelimiter when needed
+* ClerkJS - auth library
+* tRPC - helps with API calls
+* zod - validation library for arguments * passed through API calls
+* MongoDB - db
+* Prisma - helps with schema for mongodb
+* hot-react-toast - lil' pop-up notifications
+* dayjs - formatting times
+
+## What is tRPC?
+
+tRPC is the library we use to create our own API. It relies on TypeScript so your IDE can tell you what endpoints you have on your backend that you want the general user to be able to call in something like a web browser.
+
+## Glossy
+
+What is a..:
+* Router: Hosts procedures relating to the name of the router. e.g. `/messages/getAll` : messages is the 'router'
+* Procedure: The equivalent of an endpoint in terms of REST. e.g. `/messages/getAll` : getAll is the endpoint.
+
+Make the procedure:
+
+```ts
+// pretend this is a new file under /src/server/api/routers called messages.ts
+
+// the export variable can be anything, just make sure you know how to import it in your api/root.ts file.
+export const messageRouter = createTRPCRouter({
+  // getAll has to be named getAll if you want to use this name on the frontend side.
+  // publicProcedure is a function that should already be here inside your T3 app.
+  // query - a 'GET' in REST terms. (this means we aren't trying to modify the database (you can but you shouldn't))
+  // async - because we make a call to the database that returns a promise (requires await)
+  getAll: publicProcedure.query(async ({ ctx }) => {
+    // call to prisma, first 100 messages with the newest first
+    const messages = await ctx.db.messages.findMany({
+      take: 100,
+      orderBy: [
+        {
+          createdAt: "desc"
+        }
+      ]
+    });
+    // cant do return await coz javascript is a weird language
+    return messages;
+  }),
+
+  // glaring security feature: WHY the hell is this a publicProcedure?? (a procedure that at least makes sure the user is logged in should be needed)
+  // z is an import from zod used to validate tRPC input. no extra work is needed besides npm i zod, which is already done upon running `npm i`. An awesome library. inside your mutation or query code, it's implied that the input is sanitized.
+  // mutation - a 'POST' or ANYTHING else in REST terms. (modifies the database, delete a message, edit a message, etc.)
+  // .input - can be fed like publicProcedure.input() which accepts arguments. can be accessed by including ({ ctx, input }) inside the query func.
+  // different types: strings, with a min and max length.
+  edit: publicProcedure.input(z.object({ id: z.string(), newContent: z.string().min(1).max(2000) })).mutation(async ({ ctx, input }) => {
+    // theoretically, idk never tried this
+    const message = await ctx.db.messages.update({
+      where: {
+        id: input.id
+      },
+      data: {
+        content: input.newContent
+      }
+    });
+
+    // ???
+    if(!message) throw new TRPCError({ code: "NOT_FOUND", message: "bro ur msg id is bad" });
+    // return the edited message, if you want to reflect it on the frontend
+    return message;
+  })
+});
+```
+
+Now, we have to define the router in `./src/server/api/root.ts`. Easy as making this edit:
+
+```ts
+// note how the same createrouter func was used. technically, you could have an endpoint in this file.
+export const appRouter = createTRPCRouter({
+  // dont forget to import the router
+  messages: messageRouter
+});
+```
+
+How would you call it on the frontend?
+
+```tsx
+import { api } from "~/utils/api";
+// ...
+// because the func is async it will also return a promise that needs to be awaited
+export default async function hahauqheofd8yeghfuyirgf() {
+  // returns an object as such:
+  // { data: [messages], isLoading: true, /* other stuff */ }
+  const { data, isLoading } = await api.messages.getAll.useQuery();
+
+  // show ugly load screen
+  if(isLoading) return <div>fetching posts</div>;
+  if(data === undefined || data === null) return <div>no data wtf?</div>;
+  if(data.length === 0) return <div>No data</div>;
+
+  //show messages pretend these properties exist
+  // map - give me an array by running the procedure i feed you. in this case it returns a list of divs with the message content
+  return (
+    <div>
+      {data.map((m) => (<div key={m.id}>{m.content}</div>))}
+    </div>
+  )
+};
+```
 
 # Below: Incomplete stuff on t3 stack
 
@@ -215,7 +310,3 @@ Add it to your schema, then `npx prisma db push` to update.
 # NPM Package Hell
 
 From the tutorial, we install a few more packages to carry out some tasks for us.
-
-## What is tRPC?
-
-tRPC is the library we use to create our own API. It relies on TypeScript so your IDE can tell you what endpoints you have on your backend that you want the general user to be able to call in something like a web browser.
